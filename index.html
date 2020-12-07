@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+    <head>
+        <title>jsPlumbToolkit - Angular integration</title>
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1" />
+        <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+        <!-- CSS -->
+        <link rel="stylesheet" href="node_modules/jsplumbtoolkit/dist/css/jsplumbtoolkit.css">
+        <link rel="stylesheet" href="node_modules/jsplumbtoolkit-syntax-highlighter/dist/css/jsplumbtoolkit-syntax-highlighter.css">
+        <link rel="stylesheet" href="node_modules/jsplumbtoolkit-demo-support/dist/css/jsplumbtoolkit-demo-support.css">
+        <link rel="stylesheet" href="node_modules/jsplumbtoolkit-editable-connectors/dist/css/jsplumbtoolkit-editable-connectors.css">
+        <!-- /CSS -->
+
+        <link rel="stylesheet" href="app.css">
+
+    </head>
+    <body>
+
+
+    <!-- content -->
+
+    <!-- edit text (question or action or output or edge label) -->
+    <script type="jtk" class="dlg" id="dlgText" title="Enter Text">
+            <input type="text" size="50" jtk-focus jtk-att="text" value="${text}" jtk-commit="true"/>
+        </script>
+
+    <script type="jtk" class="dlg" id="dlgConfirm" title="Please Confirm">
+            ${msg}?
+        </script>
+
+    <script type="jtk" class="dlg" id="dlgMessage" title="Message" cancel="false">
+             ${msg}
+        </script>
+
+    <div class="jtk-demo-main" id="jtk-demo-flowchart" ng-controller="DemoController as DemoController" ng-app="app">
+
+
+        <script type="text/ng-template" id="start_template.tpl">
+            <div ng-attr-style="width:{{node.w}}px;height:{{node.h}}px;">
+                <div style="position:relative">
+                    <svg ng-attr-width="{{ node.w }}" ng-attr-height="{{ node.h }}">
+                        <ellipse ng-attr-cx="{{ node.w/2 }}" ng-attr-cy="{{ node.h/2 }}" ng-attr-rx="{{ (node.w/2) - 10 }}" ng-attr-ry="{{ (node.h/2) - 10 }}" class="inner"/>
+                        <text text-anchor="middle" ng-attr-x="{{ node.w / 2 }}" ng-attr-y="{{ node.h / 2 }}" dominant-baseline="central">{{node.text}}</text>
+                    </svg>
+                </div>
+                <div class="drag-start connect"></div>
+            </div>
+            <jtk-source port-type="start" filter=".connect" filter-negate="true"></jtk-source>
+        </script>
+
+        <script type="text/ng-template" id="question_template.tpl">
+            <div ng-attr-style="width:{{node.w}}px;height:{{node.h}}px;">
+
+                <svg ng-attr-width="{{node.w}}" ng-attr-height="{{node.h}}">
+                    <path ng-attr-d="M {{node.w/2}} 10 L {{node.w-10}} {{node.h/2}} L {{node.w/2}} {{node.h-10}} L 10 {{node.h/2}} Z" class="inner"/>
+                    <text text-anchor="middle" ng-attr-x="{{node.w/2}}" ng-attr-y="{{node.h/2}}" dominant-baseline="central">{{node.text}}</text>
+                </svg>
+
+                <div class="node-edit node-action"></div>
+                <div class="node-delete node-action delete"></div>
+                <div class="drag-start connect"></div>
+            </div>
+            <jtk-source port-type="source" filter=".connect"></jtk-source>
+            <jtk-target port-type="target"></jtk-target>
+        </script>
+
+        <script type="text/ng-template" id="action_template.tpl">
+            <div ng-attr-style="width:{{node.w}}px;height:{{node.h}}px;">
+                <div style="position:relative">
+                    <svg ng-attr-width="{{node.w}}" ng-attr-height="{{node.h}}">
+                        <rect x="10" y="10" ng-attr-width="{{node.w-20}}" ng-attr-height="{{node.h-20}}" class="inner"/>
+                        <text text-anchor="middle" ng-attr-x="{{node.w/2}}" ng-attr-y="{{node.h/2}}" dominant-baseline="central">{{node.text}}</text>
+                    </svg>
+                </div>
+                <div class="node-edit node-action"></div>
+                <div class="node-delete node-action delete"></div>
+                <div class="drag-start connect"></div>
+            </div>
+            <jtk-target port-type="target"></jtk-target>
+            <jtk-source port-type="source" filter=".connect"></jtk-source>
+        </script>
+
+        <script type="text/ng-template" id="output_template.tpl">
+            <div ng-attr-style="width:{{node.w}}px;height:{{node.h}}px;">
+                <div style="position:relative">
+                    <svg ng-attr-width="{{node.w}}" ng-attr-height="{{node.h}}">
+                        <rect x="0" y="0" ng-attr-width="{{node.w}}" ng-attr-height="{{node.h}}"/>
+                        <text text-anchor="middle" ng-attr-x="{{node.w/2}}" ng-attr-y="{{node.h/2}}" dominant-baseline="central">{{node.text}}</text>
+                    </svg>
+                </div>
+                <div class="node-edit node-action"></div>
+                <div class="node-delete node-action delete"></div>
+            </div>
+            <jtk-target port-type="target"></jtk-target>
+        </script>
+
+        <!-- this is the main drawing area -->
+        <div class="jtk-demo-canvas">
+
+            <jsplumb-toolkit params="DemoController.toolkitParams"
+                     init="DemoController.init"
+                     render-params="DemoController.renderParams"
+                     jtk-id="flowchartToolkit"
+                     surface-id="flowchartSurface"
+                     style="width:100%;height:100%;position:relative;margin:0">
+
+                <!-- controls -->
+                <div class="controls">
+                    <i class="fa fa-arrows selected-mode" mode="pan" title="Pan Mode"></i>
+                    <i class="fa fa-pencil" mode="select" title="Select Mode"></i>
+                    <i class="fa fa-home" reset title="Zoom To Fit"></i>
+                </div>
+
+                <!-- miniview -->
+                <jsplumb-miniview surface-id="flowchartSurface" class="miniview"></jsplumb-miniview>
+
+            </jsplumb-toolkit>
+
+        </div>
+
+        <div class="jtk-demo-rhs">
+            <!-- the node palette -->
+            <div class="sidebar node-palette" jsplumb-palette selector="div" surface-id="flowchartSurface" generator="DemoController.dataGenerator" on-drop="DemoController.onDrop">
+                <div data-node-type="{{ node.type }}" title="Drag to add new" ng-repeat="node in nodeTypes" class="sidebar-item">
+                    {{node.label}}
+                </div>
+            </div>
+
+            <div class="description">
+                <p>
+                    This sample application is a copy of the Flowchart Builder application, using the Toolkit's
+                    Angular 1.x integration components.
+                </p>
+                <ul>
+                    <li>Drag new nodes from the palette on the left onto the workspace to add nodes</li>
+                    <li>Drag from the grey border of any node to any other node to establish a link, then provide a description for the link's label</li>
+                    <li>Click a link to edit its label.</li>
+                    <li>Click the 'Pencil' icon to enter 'select' mode, then select several nodes. Click the canvas to exit.</li>
+                    <li>Click the 'Home' icon to zoom out and see all the nodes.</li>
+                </ul>
+            </div>
+            <!-- the current dataset -->
+            <div class="jtk-demo-dataset"></div>
+        </div>
+
+
+</div>
+
+    <!-- /content -->
+
+
+<script src="node_modules/angular/angular.js"></script>
+<script src="node_modules/jsplumbtoolkit/dist/js/jsplumbtoolkit.js"></script>
+    <script src="node_modules/jsplumbtoolkit-drop/dist/js/jsplumbtoolkit-drop.js"></script>
+    <script src="node_modules/jsplumbtoolkit-syntax-highlighter/dist/js/jsplumbtoolkit-syntax-highlighter.js"></script>
+<script src="node_modules/jsplumbtoolkit-angular-1.x/dist/js/jsplumbtoolkit-angular-1.x.js"></script>
+    <script src="node_modules/jsplumbtoolkit-editable-connectors/dist/js/jsplumbtoolkit-editable-connectors.js"></script>
+<script src="app.js"></script>
+
+
+</body>
+</html>
