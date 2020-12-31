@@ -1,11 +1,11 @@
 {
     "dependencies": {
         "angular": "1.4.5",
-        "jsplumbtoolkit": "file:../../jsplumbtoolkit.tgz",
-        "jsplumbtoolkit-angular-1.x": "file:../../jsplumbtoolkit-angular-1.x.tgz",
-        "jsplumbtoolkit-drop": "file:../../jsplumbtoolkit-drop.tgz",
-        "jsplumbtoolkit-syntax-highlighter": "file:../../jsplumbtoolkit-syntax-highlighter.tgz",
-        "jsplumbtoolkit-demo-support": "file:../../jsplumbtoolkit-demo-support.tgz",
-        "jsplumbtoolkit-editable-connectors": "file:../../jsplumbtoolkit-editable-connectors.tgz"
+        "jsplumbtoolkit": "file:./jsplumbtoolkit.tgz",
+        "jsplumbtoolkit-angular-1.x": "file:./jsplumbtoolkit-angular-1.x.tgz",
+        "jsplumbtoolkit-drop": "file:./jsplumbtoolkit-drop.tgz",
+        "jsplumbtoolkit-syntax-highlighter": "file:./jsplumbtoolkit-syntax-highlighter.tgz",
+        "jsplumbtoolkit-demo-support": "file:./jsplumbtoolkit-demo-support.tgz",
+        "jsplumbtoolkit-editable-connectors": "file:./jsplumbtoolkit-editable-connectors.tgz"
     }
 }
