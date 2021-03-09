@@ -81,7 +81,7 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
         toolkit = scope.toolkit;
 
         toolkit.load({
-            url:"data/copyright.json"
+            url:"copyright.json"
         });
 
         // -------------- configure buttons --------------------------------
