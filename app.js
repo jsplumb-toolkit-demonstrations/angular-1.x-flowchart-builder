@@ -40,23 +40,23 @@ app.directive('output', function (jsPlumbFactory) {
     });
 });
 
+// initialise the orthogonal editor
+//jsPlumbToolkitConnectorEditorOrthogonal.initialize()
 
 app.controller("DemoController", function ($log, $scope, jsPlumbService) {
-    var ctrl = this;
 
     // toolkit id
     var toolkitId = "flowchartToolkit";
     var toolkit;
+    var surface;
+    var edgeEditor;
 
-    window.jsps = jsPlumbService;
-    window.ctrl = this;
-
-    var self = this;
-
+    var dialogs = jsPlumbToolkitDialogs.newInstance({selector:".dlg"});
+    
 // ---------------------------- operations on nodes, edges ---------------------------------------------------------
 
     var _editLabel = function(edge) {
-        jsPlumbToolkit.Dialogs.show({
+        dialogs.show({
             id: "dlgText",
             data: {
                 text: edge.data.label || ""
@@ -79,6 +79,9 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
     this.init = function(scope, element, attrs) {
 
         toolkit = scope.toolkit;
+        surface = scope.surface;
+
+        edgeEditor = jsPlumbToolkitConnectorEditors.newInstance(surface)
 
         toolkit.load({
             url:"data/copyright.json"
@@ -89,30 +92,20 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
         var controls = element[0].querySelector(".controls");
 
         // pan mode/select mode
-        jsPlumb.on(controls, "tap", "[mode]", function () {
+        surface.on(controls, "tap", "[mode]", function () {
             scope.surface.setMode(this.getAttribute("mode"));
         });
 
         // on home button click, zoom content to fit.
-        jsPlumb.on(controls, "tap", "[reset]", function () {
+        surface.on(controls, "tap", "[reset]", function () {
             scope.toolkit.clearSelection();
             scope.surface.zoomToFit();
-        });
-
-        // configure Drawing tools. This is an optional include.
-        new jsPlumbToolkit.DrawingTools({
-            renderer: scope.surface
-        });
-
-        // initialize dialogs
-        jsPlumbToolkit.Dialogs.initialize({
-            selector: ".dlg"
         });
 
         //
         // any operation that caused a data update (and would have caused an autosave), fires a dataUpdated event.
         //
-        new jsPlumbSyntaxHighlighter(toolkit, ".jtk-demo-dataset");
+        //new jsPlumbSyntaxHighlighter(toolkit, ".jtk-demo-dataset");
     };
 
 // ----------------------------- data for the app ----------------------------------------------------------
@@ -125,7 +118,7 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
 
     $scope.removeNode = function (node) {
         var info = this.surface.getObjectInfo(node);
-        jsPlumbToolkit.Dialogs.show({
+        dialogs.show({
             id: "dlgConfirm",
             data: {
                 msg: "Delete '" + info.obj.data.text + "'"
@@ -142,7 +135,7 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
         // relates to the element. it ascends through parent nodes until it finds a node that is
         // registered with the toolkit.
         var info = this.surface.getObjectInfo(node);
-        jsPlumbToolkit.Dialogs.show({
+        dialogs.show({
             id: "dlgText",
             data: info.obj.data,
             title: "Edit " + info.obj.type + " name",
@@ -181,7 +174,7 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
 
     this.toolkitParams = {
         nodeFactory: function (type, data, callback) {
-            jsPlumbToolkit.Dialogs.show({
+            dialogs.show({
                 id: "dlgText",
                 title: "Enter " + type + " name:",
                 onOK: function (d) {
@@ -191,7 +184,7 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
                         // and it was at least 2 chars
                         if (data.text.length >= 2) {
                             // set width and height.
-                            jsPlumb.extend(data, nodeDimensions[type]);
+                            jsPlumbUtil.extend(data, nodeDimensions[type]);
                             // set an id and continue.
                             data.id = jsPlumbUtil.uuid();
                             callback(data);
@@ -212,25 +205,25 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
     this.renderParams = {
         view: {
             nodes: {
-                "start": { template: "start" },
+                "start": { templateId: "start" },
                 "selectable": {
                     events: {
                         tap: function (params) {
-                            toolkit.toggleSelection(params.node);
+                            toolkit.toggleSelection(params.obj);
                         }
                     }
                 },
                 "question": {
                     parent: "selectable",
-                    template: "question"
+                    templateId: "question"
                 },
                 "action": {
                     parent: "selectable",
-                    template: "action"
+                    templateId: "action"
                 },
                 "output":{
                     parent:"selectable",
-                    template:"output"
+                    templateId:"output"
                 }
             },
             // There are two edge types defined - 'yes' and 'no', sharing a common
@@ -239,12 +232,12 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
                 "default": {
                     anchor:"AutoDefault",
                     endpoint:"Blank",
-                    connector: ["EditableFlowchart", { cornerRadius: 5 } ],
+                    connector: {type:"Orthogonal", options:{ cornerRadius: 5 } },
                     paintStyle: { strokeWidth: 2, stroke: "#f76258", outlineWidth: 3, outlineStroke: "transparent" },	//	paint style for this edge type.
                     hoverPaintStyle: { strokeWidth: 2, stroke: "rgb(67,67,67)" }, // hover paint style for this edge type.
                     events: {
                         "dblclick": function (params) {
-                            jsPlumbToolkit.Dialogs.show({
+                            dialogs.show({
                                 id: "dlgConfirm",
                                 data: {
                                     msg: "Delete Edge"
@@ -255,27 +248,28 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
                             });
                         },
                         click:function(p) {
-                            p.renderer.startEditing(p.edge);
+                            edgeEditor.startEditing(p.edge);
                         }
                     },
                     overlays: [
-                        [ "Arrow", { location: 1, width: 10, length: 10 }],
-                        [ "Arrow", { location: 0.3, width: 10, length: 10 }]
+                        { type:"Arrow", options:{ location: 1, width: 10, length: 10 }},
+                        { type:"Arrow", options:{ location: 0.3, width: 10, length: 10 }}
                     ]
                 },
                 "connection":{
                     parent:"default",
                     overlays:[
-                        [
-                            "Label", {
+                        {
+                            type: "Label",
+                            options: {
                                 label: "${label}",
-                                events:{
-                                    click:function(params) {
+                                events: {
+                                    click: function (params) {
                                         _editLabel(params.edge);
                                     }
                                 }
                             }
-                        ]
+                        }
                     ]
                 }
             },
@@ -310,6 +304,7 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
         events: {
             canvasClick: function (e) {
                 toolkit.clearSelection();
+                edgeEditor.stopEditing();
             },
             edgeAdded:function(params) {
                 if (params.addedByMouse) {
@@ -319,8 +314,8 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
             // listener for mode change on renderer.
             modeChanged:function(mode) {
                 var controls = document.querySelector(".controls");
-                jsPlumb.removeClass(controls.querySelectorAll("[mode]"), "selected-mode");
-                jsPlumb.addClass(controls.querySelectorAll("[mode='" + mode + "']"), "selected-mode");
+                surface.removeClass(controls.querySelectorAll("[mode]"), "selected-mode");
+                surface.addClass(controls.querySelectorAll("[mode='" + mode + "']"), "selected-mode");
             },
             click:function(e) {
                 alert(e)
@@ -330,7 +325,10 @@ app.controller("DemoController", function ($log, $scope, jsPlumbService) {
         dragOptions: {
             filter: ".jtk-draw-handle, .node-action, .node-action i, .connect"
         },
-        zoomToFit:true
+        zoomToFit:true,
+        plugins:[
+            "drawingTools"
+        ]
     };
 
 
